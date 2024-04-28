@@ -33,7 +33,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
-  const clientIP = req.ip;
   const userAgent = req.headers["user-agent"];
   const parser = new UAParser();
   const result = parser.setUA(userAgent).getResult();
@@ -50,7 +49,6 @@ app.get("/", (req, res) => {
     browser: browser,
     device: device,
     operatingSystem: os,
-    ipAddress: clientIP,
   });
 });
 
