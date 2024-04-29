@@ -5,7 +5,8 @@ import morgan from "morgan";
 import createError from "http-errors";
 import { rateLimit } from "express-rate-limit";
 import UAParser from "ua-parser-js";
-import { userRouter } from "./routers/usersRouter.js";
+import { userRouter } from "./routers/userRouters.js";
+import { shopRouter } from "./routers/shopRouters.js";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/shops", shopRouter);
 
 app.get("/", (req, res) => {
   const userAgent = req.headers["user-agent"];

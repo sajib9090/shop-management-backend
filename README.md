@@ -6,5 +6,6 @@ creating users =>
 endpoint-- api/v1/users/create-user == method --post
 required info - email, username, mobile, shop_name and password.
 
+collect data from user or visitor then send a email for verification after verification the user information insert into database
 
-
+after activate user create shop with existing user information
