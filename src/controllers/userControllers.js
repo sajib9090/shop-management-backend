@@ -1,6 +1,9 @@
 import createError from "http-errors";
 import { ObjectId } from "mongodb";
-import { usersCollection } from "../collections/collections.js";
+import {
+  shopsCollection,
+  usersCollection,
+} from "../collections/collections.js";
 import { validateString } from "../helpers/validateString.js";
 import slugify from "slugify";
 import validator from "validator";
@@ -12,6 +15,7 @@ import createJWT from "../helpers/createJWT.js";
 import { clientURL, jwtSecret } from "../../secret.js";
 import { emailWithNodeMailer } from "../helpers/email.js";
 import jwt from "jsonwebtoken";
+import { handleCreateShop } from "./shopControllers.js";
 
 const handleCreateUser = async (req, res, next) => {
   const { shop_name, email, name, mobile, password, address } = req.body;
@@ -170,16 +174,32 @@ const handleActivateUserAccount = async (req, res, next) => {
       updatedAt: new Date(),
     };
 
-    const createdUser = await usersCollection.insertOne(newUser);
+    await usersCollection.insertOne(newUser);
 
-    if (createdUser?.insertedId) {
-      console.log("create shop using info");
+    const newShop = {
+      shop_name: decoded?.shop_name,
+      shop_slug: slugify(decoded?.shop_name),
+      address: decoded?.address,
+      subscription: { last_payment: "" },
+      payment_info: { payment_invoices: [] },
+      subscription_expired: false,
+      shop_images: { logo: "", favicon: "" },
+      createdBy: decoded?.username,
+      createdAt: new Date(),
+    };
+
+    const createdNewShop = await shopsCollection.insertOne(newShop);
+    if (!createdNewShop?.insertedId) {
+      throw createError(
+        400,
+        "Something went wrong. when shop information inserted"
+      );
     }
 
     res.status(200).send({
       success: true,
       message: "User created successfully",
-      data: newUser,
+      // should send html for user interface
     });
   } catch (error) {
     next(error);
