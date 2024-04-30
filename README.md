@@ -11,3 +11,16 @@ collect data from user or visitor then send a email for verification after verif
 after activate user create shop with existing user information
 
 create some middleware for validation
+
+##create user route => 'api/v1/users/create-user',
+##activate user with email validation route => 'api/v1/users/verify/:token'
+##Require data for creating user.
+=> shop_name: string (unique)
+=> name: string (full name)
+=> email: string (unique)
+=> mobile: string
+=> password: string(min 6 characters)
+=> address: object{
+detailed_shop_address: string,
+country: string
+}
