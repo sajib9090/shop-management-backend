@@ -248,24 +248,24 @@ const handleLoginUser = async (req, res, next) => {
       return;
     }
 
-    const existUser = await usersCollection.findOne({
+    const user = await usersCollection.findOne({
       $or: [{ username: stringUsername }, { email: stringEmail }],
     });
 
-    if (!existUser) {
+    if (!user) {
       next(createError.BadRequest("Invalid username or email address"));
       return;
     }
 
     //match password
-    const isPasswordValid = await bcrypt.compare(password, existUser.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       next(createError.Unauthorized("Invalid Password"));
       return;
     }
 
     //check user banned or not
-    if (existUser.banned_user) {
+    if (user.banned_user) {
       next(
         createError.Unauthorized("You are banned. Please contact authority")
       );
@@ -273,7 +273,7 @@ const handleLoginUser = async (req, res, next) => {
     }
 
     //check user banned or not
-    if (existUser.deleted_user) {
+    if (user.deleted_user) {
       next(
         createError.Unauthorized("You are deleted. Please contact authority")
       );
@@ -281,7 +281,7 @@ const handleLoginUser = async (req, res, next) => {
     }
 
     //token cookie
-    const accessToken = await createJWT({ existUser }, jwtAccessToken, "1m");
+    const accessToken = await createJWT({ user }, jwtAccessToken, "1m");
     res.cookie("accessToken", accessToken, {
       maxAge: 60 * 1000, // 1 minute in milliseconds
       httpOnly: true,
@@ -289,15 +289,15 @@ const handleLoginUser = async (req, res, next) => {
       sameSite: "none",
     });
 
-    const refreshToken = await createJWT({ existUser }, jwtRefreshToken, "7d");
+    const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
     res.cookie("refreshToken", refreshToken, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
       httpOnly: true,
       secure: true,
       sameSite: "none",
     });
 
-    const loggedInUser = existUser;
+    const loggedInUser = user;
     delete loggedInUser.password;
     delete loggedInUser.admin;
 
@@ -305,6 +305,59 @@ const handleLoginUser = async (req, res, next) => {
       success: true,
       message: "Login successfully",
       data: loggedInUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const handleLogoutUser = async (req, res, next) => {
+  try {
+    // console.log(req.user);
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    res.status(200).send({
+      success: true,
+      message: "Logout successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const handleRefreshToken = async (req, res, next) => {
+  const oldRefreshToken = req.cookies.refreshToken;
+  try {
+    if (!oldRefreshToken) {
+      throw createError(404, "Refresh token not found. Login first");
+    }
+    //verify refresh token
+    const decodedToken = jwt.verify(oldRefreshToken, jwtRefreshToken);
+    if (!decodedToken) {
+      throw createError(401, "Invalid refresh token. Please Login");
+    }
+
+    // if token validation success generate new access token
+    const accessToken = await createJWT(
+      { user: decodedToken.user },
+      jwtAccessToken,
+      "1m"
+    );
+
+    res.cookie("accessToken", accessToken, {
+      maxAge: 60 * 1000, // 1 minute in milliseconds
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    // Update req.user with the new decoded user information
+    req.user = decodedToken.user;
+
+    res.status(200).send({
+      success: true,
+      message: "New access token generate successfully",
     });
   } catch (error) {
     next(error);
@@ -327,4 +380,6 @@ export {
   handleActivateUserAccount,
   handleGetUsers,
   handleLoginUser,
+  handleLogoutUser,
+  handleRefreshToken,
 };
