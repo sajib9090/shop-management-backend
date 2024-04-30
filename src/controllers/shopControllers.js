@@ -8,15 +8,4 @@ import { requiredField } from "../helpers/requiredField.js";
 import { requiredObject } from "../helpers/validateObject.js";
 import { duplicateChecker } from "../helpers/duplicateChecker.js";
 
-const handleCreateShop = async (req, res, next) => {
-  try {
-    res.status(200).send({
-      success: true,
-      message: "Shop created successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export { handleCreateShop };
+export {};

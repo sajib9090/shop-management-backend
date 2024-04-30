@@ -12,10 +12,14 @@ import { requiredObject } from "../helpers/validateObject.js";
 import { duplicateChecker } from "../helpers/duplicateChecker.js";
 import bcrypt from "bcryptjs";
 import createJWT from "../helpers/createJWT.js";
-import { clientURL, jwtSecret } from "../../secret.js";
+import {
+  clientURL,
+  jwtAccessToken,
+  jwtRefreshToken,
+  jwtSecret,
+} from "../../secret.js";
 import { emailWithNodeMailer } from "../helpers/email.js";
 import jwt from "jsonwebtoken";
-import { handleCreateShop } from "./shopControllers.js";
 
 const handleCreateUser = async (req, res, next) => {
   const { shop_name, email, name, mobile, password, address } = req.body;
@@ -171,7 +175,6 @@ const handleActivateUserAccount = async (req, res, next) => {
       deleted_user: decoded?.deleted_user,
       address: decoded?.address,
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
 
     await usersCollection.insertOne(newUser);
@@ -196,14 +199,132 @@ const handleActivateUserAccount = async (req, res, next) => {
       );
     }
 
+    res.setHeader("Content-Type", "text/html");
+
+    // Send the HTML content as the response body
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>User Activated</title>
+            </head>
+            <body>
+                <h1>User created successfully</h1>
+                <p>Now you can close this window </p>
+                <!-- Your HTML content for the user interface goes here -->
+            </body>
+        </html>
+    `;
+    res.status(200).send(htmlContent);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const handleLoginUser = async (req, res, next) => {
+  const { username, email, password } = req.body;
+  try {
+    if ((!username && !email) || !password) {
+      throw createError(400, "Username or email and password is required");
+    }
+
+    const stringEmail =
+      email && email ? email?.trim().replace(/\s+/g, "").toLowerCase() : "";
+    const stringUsername =
+      username && username
+        ? username?.trim().replace(/\s+/g, "").toLowerCase()
+        : "";
+
+    if (email && !validator.isEmail(stringEmail)) {
+      next(createError.BadRequest("Invalid email address format"));
+      return;
+    }
+
+    //password validation
+    if (password.length < 6) {
+      next(
+        createError.Unauthorized("Password should be at least 6 characters")
+      );
+      return;
+    }
+
+    const existUser = await usersCollection.findOne({
+      $or: [{ username: stringUsername }, { email: stringEmail }],
+    });
+
+    if (!existUser) {
+      next(createError.BadRequest("Invalid username or email address"));
+      return;
+    }
+
+    //match password
+    const isPasswordValid = await bcrypt.compare(password, existUser.password);
+    if (!isPasswordValid) {
+      next(createError.Unauthorized("Invalid Password"));
+      return;
+    }
+
+    //check user banned or not
+    if (existUser.banned_user) {
+      next(
+        createError.Unauthorized("You are banned. Please contact authority")
+      );
+      return;
+    }
+
+    //check user banned or not
+    if (existUser.deleted_user) {
+      next(
+        createError.Unauthorized("You are deleted. Please contact authority")
+      );
+      return;
+    }
+
+    //token cookie
+    const accessToken = await createJWT({ existUser }, jwtAccessToken, "1m");
+    res.cookie("accessToken", accessToken, {
+      maxAge: 60 * 1000, // 1 minute in milliseconds
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    const refreshToken = await createJWT({ existUser }, jwtRefreshToken, "7d");
+    res.cookie("refreshToken", refreshToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    const loggedInUser = existUser;
+    delete loggedInUser.password;
+    delete loggedInUser.admin;
+
     res.status(200).send({
       success: true,
-      message: "User created successfully",
-      // should send html for user interface
+      message: "Login successfully",
+      data: loggedInUser,
     });
   } catch (error) {
     next(error);
   }
 };
 
-export { handleCreateUser, handleActivateUserAccount };
+const handleGetUsers = async (req, res, next) => {
+  try {
+    res.status(200).send({
+      success: true,
+      message: "Users retrieved successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  handleCreateUser,
+  handleActivateUserAccount,
+  handleGetUsers,
+  handleLoginUser,
+};
