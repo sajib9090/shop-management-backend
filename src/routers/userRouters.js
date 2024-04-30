@@ -2,6 +2,7 @@ import express from "express";
 import {
   handleActivateUserAccount,
   handleCreateUser,
+  handleGetSingleUser,
   handleGetUsers,
   handleLoginUser,
   handleLogoutUser,
@@ -22,10 +23,11 @@ userRouter.get("/verify/:token", handleActivateUserAccount);
 // login logout
 userRouter.post("/auth-user-login", isLoggedOut, handleLoginUser);
 userRouter.post("/auth-user-logout", isLoggedIn, handleLogoutUser);
-// manage refresh token
+// manage refresh-access token
 userRouter.get("/auth-manage-token", handleRefreshToken);
 // get
-userRouter.get("/find-users", handleGetUsers);
+userRouter.get("/find-users", isLoggedIn, isAdmin, handleGetUsers);
+userRouter.get("/find-user/:id", isLoggedIn, handleGetSingleUser);
 
 //check route
 userRouter.get(

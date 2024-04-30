@@ -281,9 +281,9 @@ const handleLoginUser = async (req, res, next) => {
     }
 
     //token cookie
-    const accessToken = await createJWT({ user }, jwtAccessToken, "1m");
+    const accessToken = await createJWT({ user }, jwtAccessToken, "1d");
     res.cookie("accessToken", accessToken, {
-      maxAge: 60 * 1000, // 1 minute in milliseconds
+      maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
       httpOnly: true,
       secure: true,
       sameSite: "none",
@@ -342,11 +342,11 @@ const handleRefreshToken = async (req, res, next) => {
     const accessToken = await createJWT(
       { user: decodedToken.user },
       jwtAccessToken,
-      "1m"
+      "1d"
     );
 
     res.cookie("accessToken", accessToken, {
-      maxAge: 60 * 1000, // 1 minute in milliseconds
+      maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
       httpOnly: true,
       secure: true,
       sameSite: "none",
@@ -366,9 +366,63 @@ const handleRefreshToken = async (req, res, next) => {
 
 const handleGetUsers = async (req, res, next) => {
   try {
+    const search = req.query.search || "";
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit);
+
+    const regExSearch = new RegExp(".*" + search + ".*", "i");
+
+    let query = {};
+    if (regExSearch) {
+      query = {
+        $or: [
+          { shop_name: regExSearch },
+          { username: regExSearch },
+          { email: regExSearch },
+        ],
+      };
+    }
+
+    const users = await usersCollection
+      .find(query)
+      .sort({ username: 1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .toArray();
+
+    const count = await usersCollection.countDocuments(query);
+
     res.status(200).send({
       success: true,
       message: "Users retrieved successfully",
+      pagination: {
+        totalPages: Math.ceil(count / limit),
+        currentPage: page,
+        previousPage: page - 1 > 0 ? page - 1 : null,
+        nextPage: page + 1 <= Math.ceil(count / limit) ? page + 1 : null,
+      },
+      data: users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const handleGetSingleUser = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    if (!ObjectId.isValid(id)) {
+      throw createError(400, "Invalid params id");
+    }
+
+    const exists = await usersCollection.findOne({ _id: new ObjectId(id) });
+    if (!exists) {
+      throw createError(404, "No user found with this Id");
+    }
+    res.status(200).send({
+      success: true,
+      message: "User retrieved successfully",
+      data: exists,
     });
   } catch (error) {
     next(error);
@@ -382,4 +436,5 @@ export {
   handleLoginUser,
   handleLogoutUser,
   handleRefreshToken,
+  handleGetSingleUser,
 };
