@@ -4,6 +4,7 @@ import slugify from "slugify";
 import { requiredField } from "../helpers/requiredField.js";
 import { categoriesCollection } from "../collections/collections.js";
 import crypto from "crypto";
+import { ObjectId } from "mongodb";
 
 const handleCreateCategory = async (req, res, next) => {
   const user = req.user;
@@ -137,9 +138,59 @@ const handleDeleteCategory = async (req, res, next) => {
   }
 };
 
+const handleEditCategory = async (req, res, next) => {
+  const { id } = req.params;
+  const user = req.user;
+  const { category } = req.body;
+
+  try {
+    if (!ObjectId.isValid(id)) {
+      throw createError(400, "Invalid id");
+    }
+    const existingCategory = await categoriesCollection.findOne({
+      _id: new ObjectId(id),
+    });
+    if (!existingCategory) {
+      throw createError(404, "Document not found");
+    }
+    requiredField(category, "Category name is required");
+    const processedCategoryName = validateString(category, "Category", 3, 100);
+
+    const categoryWithSameName = await categoriesCollection.findOne({
+      category: processedCategoryName,
+    });
+    if (categoryWithSameName) {
+      throw createError(400, "A category with this name already exists");
+    }
+
+    const filter = { _id: new ObjectId(id) };
+    const categorySlug = slugify(processedCategoryName);
+    const updateResult = await categoriesCollection.updateOne(filter, {
+      $set: {
+        category: processedCategoryName,
+        category_slug: categorySlug,
+        updatedBy: user?.username,
+        updatedAt: new Date(),
+      },
+    });
+
+    if (updateResult?.modifiedCount !== 1) {
+      throw createError(500, "Failed to update the category");
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   handleCreateCategory,
   handleGetCategories,
   handleGetSingleCategory,
   handleDeleteCategory,
+  handleEditCategory,
 };

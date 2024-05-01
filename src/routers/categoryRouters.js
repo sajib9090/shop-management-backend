@@ -2,6 +2,7 @@ import express from "express";
 import {
   handleCreateCategory,
   handleDeleteCategory,
+  handleEditCategory,
   handleGetCategories,
   handleGetSingleCategory,
 } from "../controllers/categoryControllers.js";
@@ -25,3 +26,10 @@ categoryRouter.get(
 categoryRouter.get("/find-category/:param", handleGetSingleCategory);
 //delete route
 categoryRouter.delete("/remove", handleDeleteCategory);
+//update route
+categoryRouter.patch(
+  "/update-category/:id",
+  isLoggedIn,
+  isAuthority,
+  handleEditCategory
+);
