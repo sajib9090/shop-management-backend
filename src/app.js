@@ -7,6 +7,7 @@ import { rateLimit } from "express-rate-limit";
 import UAParser from "ua-parser-js";
 import { userRouter } from "./routers/userRouters.js";
 import { shopRouter } from "./routers/shopRouters.js";
+import { categoryRouter } from "./routers/categoryRouters.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use(express.urlencoded({ extended: true }));
 // routes
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/shops", shopRouter);
+app.use("/api/v1/categories", categoryRouter);
 
 app.get("/", (req, res) => {
   const userAgent = req.headers["user-agent"];

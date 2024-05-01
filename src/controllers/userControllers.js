@@ -20,6 +20,7 @@ import {
 } from "../../secret.js";
 import { emailWithNodeMailer } from "../helpers/email.js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const handleCreateUser = async (req, res, next) => {
   const { shop_name, email, name, mobile, password, address } = req.body;
@@ -158,11 +159,11 @@ const handleActivateUserAccount = async (req, res, next) => {
     }
 
     const count = await usersCollection.countDocuments();
-    const userId = String(count + 1).padStart(12, "0");
+    const generateCode = crypto.randomBytes(16).toString("hex");
 
     const newUser = {
       shop_name: decoded?.shop_name,
-      user_id: userId,
+      user_id: count + 1 + "-" + generateCode,
       name: decoded?.name,
       username: decoded?.username,
       email: decoded?.email,
@@ -395,6 +396,7 @@ const handleGetUsers = async (req, res, next) => {
     res.status(200).send({
       success: true,
       message: "Users retrieved successfully",
+      data_found: count,
       pagination: {
         totalPages: Math.ceil(count / limit),
         currentPage: page,

@@ -12,8 +12,14 @@ after activate user create shop with existing user information
 
 create some middleware for validation
 
-##create user route => 'api/v1/users/create-user',
-##activate user with email validation route => 'api/v1/users/verify/:token'
+##create user route -------------------------------------- => 'api/v1/users/create-user',
+##activate user with email validation route -------------- => 'api/v1/users/verify/:token'
+##user login route --------------------------------------- => '/api/v1/users/auth-user-login'
+##user logout route -------------------------------------- => '/api/v1/users/auth-user-logout'
+##user access token generate with refresh token ---------- => '/api/v1/users/auth-manage-token'
+##find users with multiple search query also pagination -- => 'api/v1/users/find-users'
+##find single user bt id --------------------------------- => 'api/v1/users/find-user/:id'
+
 ##Require data for creating user.
 => shop_name: string (unique)
 => name: string (full name)
@@ -24,3 +30,16 @@ create some middleware for validation
 detailed_shop_address: string,
 country: string
 }
+
+##must be an user should login and authority use like - shop_owner or shop_admin to create category
+##require data for creating category.
+=> category: string (unique)(max-100-min-3)
+
+##Category routes
+##create category route ----------------------------------- => 'api/v1/categories/create-category',
+##get single category using multiple params ----------- => 'api/v1/categories/find-category/:param',
+##get all categories using multiple query ------------- => 'api/v1/categories/find-categories?search',
+##delete category single or multiple ------------------ => 'api/v1/categories/remove',
+when want to delete -- send category_id making array then send it with request body,
+
+##getting categories using multiple query "shop_name and category"
