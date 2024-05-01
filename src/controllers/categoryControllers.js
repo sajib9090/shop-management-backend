@@ -120,7 +120,7 @@ const handleDeleteCategory = async (req, res, next) => {
   const { categoryIds } = req.body;
   try {
     if (!Array.isArray(categoryIds)) {
-      throw new Error("CategoryIds must be an array");
+      throw createError("CategoryIds must be an array");
     }
     const criteria = { category_id: { $in: categoryIds } };
 

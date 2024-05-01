@@ -64,7 +64,7 @@ const handleGetGroups = async (req, res, next) => {
 
     const groups = await groupsCollection
       .find(query)
-      .sort({ category: 1 })
+      .sort({ group: 1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .toArray();
@@ -113,7 +113,7 @@ const handleDeleteGroup = async (req, res, next) => {
   const { groupIds } = req.body;
   try {
     if (!Array.isArray(groupIds)) {
-      throw new Error("GroupIds must be an array");
+      throw createError("GroupIds must be an array");
     }
     const criteria = { group_id: { $in: groupIds } };
 
