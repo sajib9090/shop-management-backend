@@ -7,6 +7,7 @@ const shopsCollection = client.db(db_name).collection("shops");
 const categoriesCollection = client.db(db_name).collection("categories");
 const groupsCollection = client.db(db_name).collection("groups");
 const suppliersCollection = client.db(db_name).collection("suppliers");
+const productTypesCollection = client.db(db_name).collection("product-types");
 
 export {
   usersCollection,
@@ -14,4 +15,5 @@ export {
   categoriesCollection,
   groupsCollection,
   suppliersCollection,
+  productTypesCollection,
 };
