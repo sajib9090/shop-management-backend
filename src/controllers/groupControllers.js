@@ -14,7 +14,7 @@ const handleCreateGroup = async (req, res, next) => {
     const processedGroupName = validateString(group, "Group", 3, 100);
 
     const exists = await groupsCollection.findOne({
-      $and: [{ shop_name: user?.shop_name }, { group: processedGroupName }],
+      $and: [{ shop_ide: user?.shop_name }, { group: processedGroupName }],
     });
 
     if (exists) {
@@ -28,7 +28,7 @@ const handleCreateGroup = async (req, res, next) => {
 
     const newGroup = {
       group_id: count + 1 + "-" + generateCode,
-      shop_name: user?.shop_name,
+      shop_id: user?.shop_id,
       group: processedGroupName,
       group_slug: groupSlug,
       createdBy: user?.username,
@@ -49,19 +49,46 @@ const handleCreateGroup = async (req, res, next) => {
 
 const handleGetGroups = async (req, res, next) => {
   try {
+    const user = req.user;
     const search = req.query.search || "";
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit);
 
     const regExSearch = new RegExp(".*" + search + ".*", "i");
 
-    let query = {};
-    if (regExSearch) {
-      query = {
-        $or: [{ shop_name: regExSearch }, { group: regExSearch }],
-      };
+    let query;
+    if (user?.admin) {
+      if (search) {
+        query = {
+          $or: [
+            { group: regExSearch },
+            { group_slug: regExSearch },
+            { group_id: regExSearch },
+            { shop_id: regExSearch },
+          ],
+        };
+      } else {
+        query = {};
+      }
+    } else {
+      if (search) {
+        query = {
+          $and: [
+            {
+              shop_id: user?.shop_id,
+            },
+          ],
+          $or: [
+            { group: regExSearch },
+            { group_slug: regExSearch },
+            { group_id: regExSearch },
+            { shop_id: regExSearch },
+          ],
+        };
+      } else {
+        query = { shop_id: user?.shop_id };
+      }
     }
-
     const groups = await groupsCollection
       .find(query)
       .sort({ group: 1 })
@@ -90,10 +117,21 @@ const handleGetGroups = async (req, res, next) => {
 
 const handleGetSingleGroup = async (req, res, next) => {
   const { param } = req.params;
+  const user = req.user;
   try {
-    const foundGroup = await groupsCollection.findOne({
-      $or: [{ group_id: param }, { group: param }, { group_slug: param }],
-    });
+    let query;
+
+    if (user?.admin) {
+      query = {
+        $or: [{ group_id: param }, { group: param }, { group_slug: param }],
+      };
+    } else {
+      query = {
+        $and: [{ shop_id: user?.shop_id }],
+        $or: [{ group_id: param }, { group: param }, { group_slug: param }],
+      };
+    }
+    const foundGroup = await groupsCollection.findOne(query);
 
     if (!foundGroup) {
       throw createError(404, "Group not found");

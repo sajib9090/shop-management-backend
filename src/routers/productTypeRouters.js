@@ -26,11 +26,10 @@ productTypeRouter.get(
 );
 productTypeRouter.get("/find-product-type/:param", handleGetSingleProductType);
 //delete route
-productTypeRouter.delete("/remove", handleDeleteProductType);
+productTypeRouter.delete("/remove", isLoggedIn, handleDeleteProductType);
 //update route
 productTypeRouter.patch(
   "/update-product-type/:id",
   isLoggedIn,
-  isAuthority,
   handleEditProductType
 );

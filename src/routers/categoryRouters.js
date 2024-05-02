@@ -9,27 +9,16 @@ import {
 import { isAuthority, isLoggedIn } from "../middlewares/authUser.js";
 export const categoryRouter = express.Router();
 
-categoryRouter.post(
-  "/create-category",
-  isLoggedIn,
-  isAuthority,
-  handleCreateCategory
-);
+categoryRouter.post("/create-category", isLoggedIn, handleCreateCategory);
 
 //get route
+categoryRouter.get("/find-categories", isLoggedIn, handleGetCategories);
 categoryRouter.get(
-  "/find-categories",
+  "/find-category/:param",
   isLoggedIn,
-  isAuthority,
-  handleGetCategories
+  handleGetSingleCategory
 );
-categoryRouter.get("/find-category/:param", handleGetSingleCategory);
 //delete route
-categoryRouter.delete("/remove", handleDeleteCategory);
+categoryRouter.delete("/remove", isLoggedIn, handleDeleteCategory);
 //update route
-categoryRouter.patch(
-  "/update-category/:id",
-  isLoggedIn,
-  isAuthority,
-  handleEditCategory
-);
+categoryRouter.patch("/update-category/:id", isLoggedIn, handleEditCategory);

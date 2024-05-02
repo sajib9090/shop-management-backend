@@ -9,17 +9,12 @@ import {
 } from "../controllers/groupControllers.js";
 export const groupRouter = express.Router();
 
-groupRouter.post("/create-group", isLoggedIn, isAuthority, handleCreateGroup);
+groupRouter.post("/create-group", isLoggedIn, handleCreateGroup);
 
 //get route
 groupRouter.get("/find-groups", isLoggedIn, isAuthority, handleGetGroups);
-groupRouter.get("/find-group/:param", handleGetSingleGroup);
+groupRouter.get("/find-group/:param", isLoggedIn, handleGetSingleGroup);
 //delete route
-groupRouter.delete("/remove", handleDeleteGroup);
+groupRouter.delete("/remove", isLoggedIn, handleDeleteGroup);
 //update route
-groupRouter.patch(
-  "/update-group/:id",
-  isLoggedIn,
-  isAuthority,
-  handleEditGroup
-);
+groupRouter.patch("/update-group/:id", isLoggedIn, handleEditGroup);

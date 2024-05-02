@@ -9,27 +9,16 @@ import {
 } from "../controllers/supplierControllers.js";
 export const supplierRouter = express.Router();
 
-supplierRouter.post(
-  "/create-supplier",
-  isLoggedIn,
-  isAuthority,
-  handleCreateSupplier
-);
+supplierRouter.post("/create-supplier", isLoggedIn, handleCreateSupplier);
 
 //get route
+supplierRouter.get("/find-suppliers", isLoggedIn, handleGetSuppliers);
 supplierRouter.get(
-  "/find-suppliers",
+  "/find-supplier/:param",
   isLoggedIn,
-  isAuthority,
-  handleGetSuppliers
+  handleGetSingleSupplier
 );
-supplierRouter.get("/find-supplier/:param", handleGetSingleSupplier);
 //delete route
-supplierRouter.delete("/remove", handleDeleteSupplier);
+supplierRouter.delete("/remove", isLoggedIn, handleDeleteSupplier);
 //update route
-supplierRouter.patch(
-  "/update-supplier/:id",
-  isLoggedIn,
-  isAuthority,
-  handleEditSupplier
-);
+supplierRouter.patch("/update-supplier/:id", isLoggedIn, handleEditSupplier);

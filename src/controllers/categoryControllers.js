@@ -14,10 +14,7 @@ const handleCreateCategory = async (req, res, next) => {
     const processedCategoryName = validateString(category, "Category", 3, 100);
 
     const exists = await categoriesCollection.findOne({
-      $and: [
-        { shop_name: user?.shop_name },
-        { category: processedCategoryName },
-      ],
+      $and: [{ shop_id: user?.shop_id }, { category: processedCategoryName }],
     });
 
     if (exists) {
@@ -31,7 +28,7 @@ const handleCreateCategory = async (req, res, next) => {
 
     const newCategory = {
       category_id: count + 1 + "-" + generateCode,
-      shop_name: user?.shop_name,
+      shop_is: user?.shop_is,
       category: processedCategoryName,
       category_slug: categorySlug,
       createdBy: user?.username,
@@ -52,17 +49,45 @@ const handleCreateCategory = async (req, res, next) => {
 
 const handleGetCategories = async (req, res, next) => {
   try {
+    const user = req.user;
     const search = req.query.search || "";
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit);
 
     const regExSearch = new RegExp(".*" + search + ".*", "i");
 
-    let query = {};
-    if (regExSearch) {
-      query = {
-        $or: [{ shop_name: regExSearch }, { category: regExSearch }],
-      };
+    let query;
+    if (user?.admin) {
+      if (search) {
+        query = {
+          $or: [
+            { category: regExSearch },
+            { category_slug: regExSearch },
+            { category_id: regExSearch },
+            { shop_id: regExSearch },
+          ],
+        };
+      } else {
+        query = {};
+      }
+    } else {
+      if (search) {
+        query = {
+          $and: [
+            {
+              shop_id: user?.shop_id,
+            },
+          ],
+          $or: [
+            { category: regExSearch },
+            { category_slug: regExSearch },
+            { category_id: regExSearch },
+            { shop_id: regExSearch },
+          ],
+        };
+      } else {
+        query = { shop_id: user?.shop_id };
+      }
     }
 
     const categories = await categoriesCollection
@@ -93,14 +118,29 @@ const handleGetCategories = async (req, res, next) => {
 
 const handleGetSingleCategory = async (req, res, next) => {
   const { param } = req.params;
+  const user = req.user;
   try {
-    const foundCategory = await categoriesCollection.findOne({
-      $or: [
-        { category_id: param },
-        { category: param },
-        { category_slug: param },
-      ],
-    });
+    let query;
+
+    if (user?.admin) {
+      query = {
+        $or: [
+          { category_id: param },
+          { category: param },
+          { category_slug: param },
+        ],
+      };
+    } else {
+      query = {
+        $and: [{ shop_id: user?.shop_id }],
+        $or: [
+          { category_id: param },
+          { category: param },
+          { category_slug: param },
+        ],
+      };
+    }
+    const foundCategory = await categoriesCollection.findOne(query);
 
     if (!foundCategory) {
       throw createError(404, "Category not found");

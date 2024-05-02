@@ -20,7 +20,7 @@ const handleCreateProductType = async (req, res, next) => {
 
     const exists = await productTypesCollection.findOne({
       $and: [
-        { shop_name: user?.shop_name },
+        { shop_name: user?.shop_id },
         { product_type: processedProductType },
       ],
     });
@@ -36,7 +36,7 @@ const handleCreateProductType = async (req, res, next) => {
 
     const newProductType = {
       product_type_id: count + 1 + "-" + generateCode,
-      shop_name: user?.shop_name,
+      shop_id: user?.shop_id,
       product_type: processedProductType,
       product_type_slug: productTypeSlug,
       createdBy: user?.username,
@@ -57,17 +57,45 @@ const handleCreateProductType = async (req, res, next) => {
 
 const handleGetProductTypes = async (req, res, next) => {
   try {
+    const user = req.user;
     const search = req.query.search || "";
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit);
 
     const regExSearch = new RegExp(".*" + search + ".*", "i");
 
-    let query = {};
-    if (regExSearch) {
-      query = {
-        $or: [{ shop_name: regExSearch }, { product_type: regExSearch }],
-      };
+    let query;
+    if (user?.admin) {
+      if (search) {
+        query = {
+          $or: [
+            { product_type: regExSearch },
+            { product_type_slug: regExSearch },
+            { product_type_id: regExSearch },
+            { shop_id: regExSearch },
+          ],
+        };
+      } else {
+        query = {};
+      }
+    } else {
+      if (search) {
+        query = {
+          $and: [
+            {
+              shop_id: user?.shop_id,
+            },
+          ],
+          $or: [
+            { product_type: regExSearch },
+            { product_type_slug: regExSearch },
+            { product_type_id: regExSearch },
+            { shop_id: regExSearch },
+          ],
+        };
+      } else {
+        query = { shop_id: user?.shop_id };
+      }
     }
 
     const productTypes = await productTypesCollection
@@ -98,14 +126,29 @@ const handleGetProductTypes = async (req, res, next) => {
 
 const handleGetSingleProductType = async (req, res, next) => {
   const { param } = req.params;
+  const user = req.user;
   try {
-    const foundProductType = await productTypesCollection.findOne({
-      $or: [
-        { product_type_id: param },
-        { product_type: param },
-        { product_type_slug: param },
-      ],
-    });
+    let query;
+
+    if (user?.admin) {
+      query = {
+        $or: [
+          { product_type_id: param },
+          { product_type: param },
+          { product_type_slug: param },
+        ],
+      };
+    } else {
+      query = {
+        $and: [{ shop_id: user?.shop_id }],
+        $or: [
+          { product_type_id: param },
+          { product_type: param },
+          { product_type_slug: param },
+        ],
+      };
+    }
+    const foundProductType = await productTypesCollection.findOne(query);
 
     if (!foundProductType) {
       throw createError(404, "Product type not found");

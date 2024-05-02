@@ -60,26 +60,23 @@ const handleCreateUser = async (req, res, next) => {
     }
 
     await duplicateChecker(
-      usersCollection,
+      shopsCollection,
       "shop_name",
       processedShopName,
       "Shop name already exists. Try something different"
     );
     await duplicateChecker(
       usersCollection,
-      "username",
-      processedShopName,
-      "Username already taken. Try something different"
-    );
-    await duplicateChecker(
-      usersCollection,
       "email",
-      processedShopName,
+      email,
       "Email already exists. Try something different"
     );
 
-    if (password.length < 6) {
-      throw createError(400, "Password must be at least 6 characters long");
+    if (password.length < 6 || password.length > 30) {
+      throw createError(
+        400,
+        "Password must be at least 6 characters long and not more than 30 characters long"
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -144,43 +141,22 @@ const handleActivateUserAccount = async (req, res, next) => {
     }
 
     const existingUser = await usersCollection.findOne({
-      $or: [
-        { shop_name: decoded?.shop_name },
-        { email: decoded?.email },
-        { username: decoded?.username },
-      ],
+      $or: [{ email: decoded?.email }, { username: decoded?.username }],
     });
 
     if (existingUser) {
       throw createError(
         "409",
-        "User already exist with this Shop name or username or email. Please sign in"
+        "User already exist with this username or email. Please sign in"
       );
     }
 
-    const count = await usersCollection.countDocuments();
-    const generateCode = crypto.randomBytes(16).toString("hex");
-
-    const newUser = {
-      shop_name: decoded?.shop_name,
-      user_id: count + 1 + "-" + generateCode,
-      name: decoded?.name,
-      username: decoded?.username,
-      email: decoded?.email,
-      mobile: decoded?.mobile,
-      password: decoded?.password,
-      admin: decoded?.admin,
-      shop_owner: decoded?.shop_owner,
-      shop_admin: decoded?.shop_admin,
-      banned_user: decoded?.banned_user,
-      deleted_user: decoded?.deleted_user,
-      address: decoded?.address,
-      createdAt: new Date(),
-    };
-
-    await usersCollection.insertOne(newUser);
+    //inserted shop info inside database
+    const countShop = await shopsCollection.countDocuments();
+    const generateShopCode = crypto.randomBytes(16).toString("hex");
 
     const newShop = {
+      shop_id: countShop + 1 + "-" + generateShopCode,
       shop_name: decoded?.shop_name,
       shop_slug: slugify(decoded?.shop_name),
       address: decoded?.address,
@@ -199,6 +175,28 @@ const handleActivateUserAccount = async (req, res, next) => {
         "Something went wrong. when shop information inserted"
       );
     }
+
+    const count = await usersCollection.countDocuments();
+    const generateCode = crypto.randomBytes(16).toString("hex");
+
+    const newUser = {
+      shop_id: countShop + 1 + "-" + generateShopCode,
+      user_id: count + 1 + "-" + generateCode,
+      name: decoded?.name,
+      username: decoded?.username,
+      email: decoded?.email,
+      mobile: decoded?.mobile,
+      password: decoded?.password,
+      admin: decoded?.admin,
+      shop_owner: decoded?.shop_owner,
+      shop_admin: decoded?.shop_admin,
+      banned_user: decoded?.banned_user,
+      deleted_user: decoded?.deleted_user,
+      address: decoded?.address,
+      createdAt: new Date(),
+    };
+
+    await usersCollection.insertOne(newUser);
 
     res.setHeader("Content-Type", "text/html");
 
@@ -367,21 +365,41 @@ const handleRefreshToken = async (req, res, next) => {
 
 const handleGetUsers = async (req, res, next) => {
   try {
+    const user = req.user;
+
     const search = req.query.search || "";
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit);
 
     const regExSearch = new RegExp(".*" + search + ".*", "i");
 
-    let query = {};
-    if (regExSearch) {
-      query = {
-        $or: [
-          { shop_name: regExSearch },
-          { username: regExSearch },
-          { email: regExSearch },
-        ],
-      };
+    let query;
+
+    if (user?.admin) {
+      if (search) {
+        query = {
+          $or: [
+            { shop_id: regExSearch },
+            { username: regExSearch },
+            { email: regExSearch },
+          ],
+        };
+      } else {
+        query = {};
+      }
+    } else {
+      if (search) {
+        query = {
+          $and: [{ shop_id: user?.shop_id }],
+          $or: [
+            { shop_id: regExSearch },
+            { username: regExSearch },
+            { email: regExSearch },
+          ],
+        };
+      } else {
+        query = { shop_id: user?.shop_id };
+      }
     }
 
     const users = await usersCollection
@@ -412,12 +430,22 @@ const handleGetUsers = async (req, res, next) => {
 
 const handleGetSingleUser = async (req, res, next) => {
   const { id } = req.params;
+  const user = req.user;
   try {
     if (!ObjectId.isValid(id)) {
       throw createError(400, "Invalid params id");
     }
 
-    const exists = await usersCollection.findOne({ _id: new ObjectId(id) });
+    let query;
+    if (user?.admin) {
+      query = { _id: new ObjectId(id) };
+    } else {
+      query = {
+        $and: [{ shop_id: user?.shop_id }, { _id: new ObjectId(id) }],
+      };
+    }
+
+    const exists = await usersCollection.findOne(query);
     if (!exists) {
       throw createError(404, "No user found with this Id");
     }

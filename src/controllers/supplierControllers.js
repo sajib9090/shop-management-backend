@@ -14,10 +14,7 @@ const handleCreateSupplier = async (req, res, next) => {
     const processedSupplierName = validateString(supplier, "Supplier", 2, 100);
 
     const exists = await suppliersCollection.findOne({
-      $and: [
-        { shop_name: user?.shop_name },
-        { supplier: processedSupplierName },
-      ],
+      $and: [{ shop_id: user?.shop_id }, { supplier: processedSupplierName }],
     });
 
     if (exists) {
@@ -31,7 +28,7 @@ const handleCreateSupplier = async (req, res, next) => {
 
     const newSupplier = {
       supplier_id: count + 1 + "-" + generateCode,
-      shop_name: user?.shop_name,
+      shop_id: user?.shop_id,
       supplier: processedSupplierName,
       supplier_slug: supplierSlug,
       createdBy: user?.username,
@@ -52,17 +49,45 @@ const handleCreateSupplier = async (req, res, next) => {
 
 const handleGetSuppliers = async (req, res, next) => {
   try {
+    const user = req.user;
     const search = req.query.search || "";
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit);
 
     const regExSearch = new RegExp(".*" + search + ".*", "i");
 
-    let query = {};
-    if (regExSearch) {
-      query = {
-        $or: [{ shop_name: regExSearch }, { supplier: regExSearch }],
-      };
+    let query;
+    if (user?.admin) {
+      if (search) {
+        query = {
+          $or: [
+            { supplier: regExSearch },
+            { supplier_slug: regExSearch },
+            { supplier_id: regExSearch },
+            { shop_id: regExSearch },
+          ],
+        };
+      } else {
+        query = {};
+      }
+    } else {
+      if (search) {
+        query = {
+          $and: [
+            {
+              shop_id: user?.shop_id,
+            },
+          ],
+          $or: [
+            { supplier: regExSearch },
+            { supplier_slug: regExSearch },
+            { supplier_id: regExSearch },
+            { shop_id: regExSearch },
+          ],
+        };
+      } else {
+        query = { shop_id: user?.shop_id };
+      }
     }
 
     const suppliers = await suppliersCollection
@@ -93,14 +118,29 @@ const handleGetSuppliers = async (req, res, next) => {
 
 const handleGetSingleSupplier = async (req, res, next) => {
   const { param } = req.params;
+  const user = req.user;
   try {
-    const foundSupplier = await suppliersCollection.findOne({
-      $or: [
-        { supplier_id: param },
-        { supplier: param },
-        { supplier_slug: param },
-      ],
-    });
+    let query;
+
+    if (user?.admin) {
+      query = {
+        $or: [
+          { supplier_id: param },
+          { supplier: param },
+          { supplier_slug: param },
+        ],
+      };
+    } else {
+      query = {
+        $and: [{ shop_id: user?.shop_id }],
+        $or: [
+          { supplier_id: param },
+          { supplier: param },
+          { supplier_slug: param },
+        ],
+      };
+    }
+    const foundSupplier = await suppliersCollection.findOne(query);
 
     if (!foundSupplier) {
       throw createError(404, "Supplier not found");
@@ -122,6 +162,7 @@ const handleDeleteSupplier = async (req, res, next) => {
     if (!Array.isArray(supplierIds)) {
       throw createError(400, "SupplierIds must be an array");
     }
+
     const criteria = { supplier_id: { $in: supplierIds } };
 
     const result = await suppliersCollection.deleteMany(criteria);

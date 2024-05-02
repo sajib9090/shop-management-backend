@@ -26,8 +26,8 @@ userRouter.post("/auth-user-logout", isLoggedIn, handleLogoutUser);
 // manage refresh-access token
 userRouter.get("/auth-manage-token", handleRefreshToken);
 // get
-userRouter.get("/find-users", isLoggedIn, isAdmin, handleGetUsers);
-userRouter.get("/find-user/:id ", isLoggedIn, handleGetSingleUser);
+userRouter.get("/find-users", isLoggedIn, handleGetUsers);
+userRouter.get("/find-user/:id", isLoggedIn, handleGetSingleUser);
 
 //check route
 userRouter.get(
