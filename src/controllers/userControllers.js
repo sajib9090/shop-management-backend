@@ -43,6 +43,18 @@ const handleCreateUser = async (req, res, next) => {
 
     const processedShopName = validateString(shop_name, "Shop name", 3, 100);
     const processedName = validateString(name, "Name", 2, 100);
+    const processedDetailedAddress = validateString(
+      address?.detailed_shop_address,
+      "Detailed address",
+      2,
+      100
+    );
+    const processedCountry = validateString(
+      address?.country,
+      "Country",
+      2,
+      100
+    );
     //if anyone try to put space with username it will remove spaces
 
     if (!validator.isEmail(email)) {
@@ -91,7 +103,10 @@ const handleCreateUser = async (req, res, next) => {
         email,
         mobile,
         password: hashedPassword,
-        address,
+        address: {
+          detailed_shop_address: processedDetailedAddress,
+          country: processedCountry,
+        },
         admin: false,
         shop_owner: true,
         shop_admin: false,
@@ -195,6 +210,23 @@ const handleActivateUserAccount = async (req, res, next) => {
       address: decoded?.address,
       createdAt: new Date(),
     };
+
+    // //token cookie
+    // const accessToken = await createJWT({ newUser }, jwtAccessToken, "1d");
+    // res.cookie("accessToken", accessToken, {
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    // });
+
+    // const refreshToken = await createJWT({ newUser }, jwtRefreshToken, "30d");
+    // res.cookie("refreshToken", refreshToken, {
+    //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    // });
 
     await usersCollection.insertOne(newUser);
 
