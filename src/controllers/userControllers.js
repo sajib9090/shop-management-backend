@@ -23,6 +23,9 @@ import { emailWithNodeMailer } from "../helpers/email.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
+// secure: false,
+// sameSite: "lax",
+
 const handleCreateUser = async (req, res, next) => {
   const { shop_name, email, name, mobile, password, address } = req.body;
   try {
@@ -330,8 +333,6 @@ const handleLoginUser = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      // secure: false,
-      // sameSite: "lax",
     });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
@@ -340,8 +341,6 @@ const handleLoginUser = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      // secure: false,
-      // sameSite: "lax",
     });
 
     const loggedInUser = user;
