@@ -23,6 +23,8 @@ import { emailWithNodeMailer } from "../helpers/email.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const handleCreateUser = async (req, res, next) => {
   const { shop_name, email, name, mobile, password, address } = req.body;
   try {
@@ -323,6 +325,7 @@ const handleLoginUser = async (req, res, next) => {
       return;
     }
 
+    console.log(isProduction);
     //token cookie
     const accessToken = await createJWT({ user }, jwtAccessToken, "1d");
     res.cookie("accessToken", accessToken, {
