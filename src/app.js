@@ -29,6 +29,7 @@ app.use(
   cors({
     origin: [
       "https://authentication-with-next.vercel.app",
+      "https://shop-management-backend-84x8.onrender.com",
       "http://localhost:3000",
     ],
     credentials: true,
