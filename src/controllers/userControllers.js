@@ -88,15 +88,23 @@ const handleCreateUser = async (req, res, next) => {
       "Email already exists. Try something different"
     );
 
-    if (password.length < 6 || password.length > 30) {
+    const trimmedPassword = password.replace(/\s/g, "");
+    if (trimmedPassword.length < 6 || trimmedPassword.length > 30) {
       throw createError(
         400,
         "Password must be at least 6 characters long and not more than 30 characters long"
       );
     }
 
+    if (!/[a-z]/.test(trimmedPassword) || !/\d/.test(trimmedPassword)) {
+      throw createError(
+        400,
+        "Password must contain at least one letter (a-z) and one number"
+      );
+    }
+
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(trimmedPassword, salt);
 
     //create token
     const token = await createJWT(
@@ -287,9 +295,12 @@ const handleLoginUser = async (req, res, next) => {
       .toLowerCase();
 
     //password validation
-    if (password.length < 6) {
+    const trimmedPassword = password.replace(/\s/g, "");
+    if (trimmedPassword.length < 6 || trimmedPassword.length > 30) {
       next(
-        createError.Unauthorized("Password should be at least 6 characters")
+        createError.Unauthorized(
+          "Password must be at least 6 characters long and not more than 30 characters long"
+        )
       );
       return;
     }
