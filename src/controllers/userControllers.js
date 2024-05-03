@@ -1,6 +1,7 @@
 import createError from "http-errors";
 import { ObjectId } from "mongodb";
 import {
+  countriesCollection,
   shopsCollection,
   usersCollection,
 } from "../collections/collections.js";
@@ -166,6 +167,12 @@ const handleActivateUserAccount = async (req, res, next) => {
       );
     }
 
+    const countryName = decoded?.address?.country;
+    const caseInsensitiveQuery = new RegExp(`^${countryName}$`, "i");
+    const existsCountry = await countriesCollection.findOne({
+      country: caseInsensitiveQuery,
+    });
+
     //inserted shop info inside database
     const countShop = await shopsCollection.countDocuments();
     const generateShopCode = crypto.randomBytes(16).toString("hex");
@@ -174,7 +181,19 @@ const handleActivateUserAccount = async (req, res, next) => {
       shop_id: countShop + 1 + "-" + generateShopCode,
       shop_name: decoded?.shop_name,
       shop_slug: slugify(decoded?.shop_name),
-      address: decoded?.address,
+      address: {
+        detailed_shop_address: decoded?.address?.detailed_shop_address,
+        country: existsCountry
+          ? existsCountry?.country.toLowerCase()
+          : "bangladesh",
+      },
+      currency: {
+        code: existsCountry ? existsCountry?.currency?.code : "BDT",
+        symbol: existsCountry ? existsCountry?.currency?.symbol : "৳",
+        name: existsCountry
+          ? existsCountry?.currency?.name
+          : "Bangladeshi Taka",
+      },
       subscription: { last_payment: "" },
       payment_info: { payment_invoices: [] },
       subscription_expired: false,
@@ -253,23 +272,16 @@ const handleActivateUserAccount = async (req, res, next) => {
 };
 
 const handleLoginUser = async (req, res, next) => {
-  const { username, email, password } = req.body;
+  const { usernameOrEmail, password } = req.body;
   try {
-    if ((!username && !email) || !password) {
+    if (!usernameOrEmail || !password) {
       throw createError(400, "Username or email and password is required");
     }
 
-    const stringEmail =
-      email && email ? email?.trim().replace(/\s+/g, "").toLowerCase() : "";
-    const stringUsername =
-      username && username
-        ? username?.trim().replace(/\s+/g, "").toLowerCase()
-        : "";
-
-    if (email && !validator.isEmail(stringEmail)) {
-      next(createError.BadRequest("Invalid email address format"));
-      return;
-    }
+    const stringData = usernameOrEmail
+      ?.trim()
+      .replace(/\s+/g, "")
+      .toLowerCase();
 
     //password validation
     if (password.length < 6) {
@@ -280,7 +292,7 @@ const handleLoginUser = async (req, res, next) => {
     }
 
     const user = await usersCollection.findOne({
-      $or: [{ username: stringUsername }, { email: stringEmail }],
+      $or: [{ username: stringData }, { email: stringData }],
     });
 
     if (!user) {
@@ -316,16 +328,20 @@ const handleLoginUser = async (req, res, next) => {
     res.cookie("accessToken", accessToken, {
       maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      // secure: true,
+      // sameSite: "none",
+      secure: false,
+      sameSite: "lax",
     });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
     res.cookie("refreshToken", refreshToken, {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      // secure: true,
+      // sameSite: "none",
+      secure: false,
+      sameSite: "lax",
     });
 
     const loggedInUser = user;

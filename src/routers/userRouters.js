@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   handleActivateUserAccount,
   handleCreateUser,
@@ -17,6 +18,9 @@ import {
 } from "../middlewares/authUser.js";
 export const userRouter = express.Router();
 
+
+
+
 // creation
 userRouter.post("/create-user", handleCreateUser);
 userRouter.get("/verify/:token", handleActivateUserAccount);
@@ -30,11 +34,4 @@ userRouter.get("/find-users", isLoggedIn, handleGetUsers);
 userRouter.get("/find-user/:id", isLoggedIn, handleGetSingleUser);
 
 //check route
-userRouter.get(
-  "/check",
-  isLoggedIn,
-  isAdmin,
-  isAuthority,
-  isShopOwner,
-  handleGetUsers
-);
+userRouter.get("/check", isLoggedIn, isAdmin, handleGetUsers);
