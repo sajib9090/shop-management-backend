@@ -27,7 +27,10 @@ const limiter = rateLimit({
 //middleware
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [
+      "https://shop-management-backend.vercel.app",
+      "http://localhost:3000",
+    ],
     credentials: true,
     optionsSuccessStatus: 200,
   })
