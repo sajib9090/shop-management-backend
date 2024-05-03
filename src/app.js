@@ -28,6 +28,7 @@ const limiter = rateLimit({
 app.use(
   cors({
     origin: [
+      "https://authentication-with-next.vercel.app",
       "https://shop-management-backend.vercel.app",
       "http://localhost:3000",
     ],
