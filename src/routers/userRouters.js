@@ -25,7 +25,7 @@ export const userRouter = express.Router();
 userRouter.post("/create-user", handleCreateUser);
 userRouter.get("/verify/:token", handleActivateUserAccount);
 // login logout
-userRouter.post("/auth-user-login", isLoggedOut, handleLoginUser);
+userRouter.post("/auth-user-login", handleLoginUser);
 userRouter.post("/auth-user-logout", isLoggedIn, handleLogoutUser);
 // manage refresh-access token
 userRouter.get("/auth-manage-token", handleRefreshToken);
