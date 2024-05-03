@@ -328,20 +328,20 @@ const handleLoginUser = async (req, res, next) => {
     res.cookie("accessToken", accessToken, {
       maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
       httpOnly: true,
-      // secure: true,
-      // sameSite: "none",
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
+      // secure: false,
+      // sameSite: "lax",
     });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
     res.cookie("refreshToken", refreshToken, {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
       httpOnly: true,
-      // secure: true,
-      // sameSite: "none",
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
+      // secure: false,
+      // sameSite: "lax",
     });
 
     const loggedInUser = user;
