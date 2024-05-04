@@ -335,8 +335,8 @@ const handleLoginUser = async (req, res, next) => {
       sameSite: "none",
       domain:
         process.env.NODE_ENV === "production"
-          ? "https://authentication-with-next.vercel.app"
-          : "http://localhost:3000",
+          ? "https://shop-management-backend.vercel.app"
+          : "http://localhost:8000",
     });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
@@ -347,8 +347,8 @@ const handleLoginUser = async (req, res, next) => {
       sameSite: "none",
       domain:
         process.env.NODE_ENV === "production"
-          ? "https://authentication-with-next.vercel.app"
-          : "http://localhost:3000",
+          ? "https://shop-management-backend.vercel.app"
+          : "http://localhost:8000",
     });
 
     const loggedInUser = user;
