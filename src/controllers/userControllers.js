@@ -358,7 +358,7 @@ const handleLoginUser = async (req, res, next) => {
     // Add CORS headers to the response
     res.setHeader(
       "Access-Control-Allow-Origin",
-      "https://authentication-with-next.vercel.app, https://shop-management-backend-84x8.onrender.com, http://localhost:3000"
+      "https://authentication-with-next.vercel.app"
     );
     res.setHeader("Access-Control-Allow-Credentials", "true");
 
