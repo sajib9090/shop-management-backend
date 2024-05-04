@@ -335,8 +335,8 @@ const handleLoginUser = async (req, res, next) => {
       sameSite: "none",
       domain:
         process.env.NODE_ENV === "production"
-          ? "https://shop-management-backend.vercel.app"
-          : "http://localhost:8000",
+          ? "https://authentication-with-next.vercel.app"
+          : "http://localhost:3000",
     });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
@@ -347,20 +347,13 @@ const handleLoginUser = async (req, res, next) => {
       sameSite: "none",
       domain:
         process.env.NODE_ENV === "production"
-          ? "https://shop-management-backend.vercel.app"
-          : "http://localhost:8000",
+          ? "https://authentication-with-next.vercel.app"
+          : "http://localhost:3000",
     });
 
     const loggedInUser = user;
     delete loggedInUser.password;
     delete loggedInUser.admin;
-
-    // Add CORS headers to the response
-    res.setHeader(
-      "Access-Control-Allow-Origin",
-      "https://authentication-with-next.vercel.app"
-    );
-    res.setHeader("Access-Control-Allow-Credentials", "true");
 
     res.status(200).send({
       success: true,
