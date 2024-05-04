@@ -295,7 +295,9 @@ const handleLoginUser = async (req, res, next) => {
       .toLowerCase();
 
     //password validation
+    
     const trimmedPassword = password.replace(/\s/g, "");
+    
     if (trimmedPassword.length < 6 || trimmedPassword.length > 30) {
       next(
         createError.Unauthorized(
@@ -343,7 +345,7 @@ const handleLoginUser = async (req, res, next) => {
       maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
       httpOnly: true,
       secure: true,
-      sameSite: "lax",
+      sameSite: "none",
     });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
@@ -351,7 +353,7 @@ const handleLoginUser = async (req, res, next) => {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
       httpOnly: true,
       secure: true,
-      sameSite: "lax",
+      sameSite: "none",
     });
 
     const loggedInUser = user;
