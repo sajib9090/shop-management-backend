@@ -333,10 +333,6 @@ const handleLoginUser = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      domain:
-        process.env.NODE_ENV === "production"
-          ? "https://shop-management-backend.vercel.app"
-          : "http://localhost:8000",
     });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
@@ -345,10 +341,6 @@ const handleLoginUser = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      domain:
-        process.env.NODE_ENV === "production"
-          ? "https://shop-management-backend.vercel.app"
-          : "http://localhost:8000",
     });
 
     const loggedInUser = user;
