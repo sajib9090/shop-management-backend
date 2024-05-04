@@ -28,7 +28,7 @@ const handleCreateCategory = async (req, res, next) => {
 
     const newCategory = {
       category_id: count + 1 + "-" + generateCode,
-      shop_is: user?.shop_is,
+      shop_id: user?.shop_id,
       category: processedCategoryName,
       category_slug: categorySlug,
       createdBy: user?.username,

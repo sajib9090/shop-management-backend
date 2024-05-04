@@ -23,9 +23,6 @@ import { emailWithNodeMailer } from "../helpers/email.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-// secure: false,
-// sameSite: "lax",
-
 const handleCreateUser = async (req, res, next) => {
   const { shop_name, email, name, mobile, password, address } = req.body;
   try {
@@ -241,24 +238,14 @@ const handleActivateUserAccount = async (req, res, next) => {
       createdAt: new Date(),
     };
 
-    // //token cookie
-    // const accessToken = await createJWT({ newUser }, jwtAccessToken, "1d");
-    // res.cookie("accessToken", accessToken, {
-    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "none",
-    // });
+    const userResult = await usersCollection.insertOne(newUser);
+    if (!userResult?.insertedId) {
+      await shopsCollection.deleteOne({
+        _id: new ObjectId(createdNewShop?.insertedId),
+      });
 
-    // const refreshToken = await createJWT({ newUser }, jwtRefreshToken, "30d");
-    // res.cookie("refreshToken", refreshToken, {
-    //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "none",
-    // });
-
-    await usersCollection.insertOne(newUser);
+      throw createError(400, "User not created. Try again");
+    }
 
     res.setHeader("Content-Type", "text/html");
 
@@ -295,9 +282,9 @@ const handleLoginUser = async (req, res, next) => {
       .toLowerCase();
 
     //password validation
-    
+
     const trimmedPassword = password.replace(/\s/g, "");
-    
+
     if (trimmedPassword.length < 6 || trimmedPassword.length > 30) {
       next(
         createError.Unauthorized(
@@ -346,6 +333,10 @@ const handleLoginUser = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
+      domain:
+        process.env.NODE_ENV === "production"
+          ? "https://shop-management-backend.vercel.app"
+          : "http://localhost:8000",
     });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
@@ -354,11 +345,22 @@ const handleLoginUser = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
+      domain:
+        process.env.NODE_ENV === "production"
+          ? "https://shop-management-backend.vercel.app"
+          : "http://localhost:8000",
     });
 
     const loggedInUser = user;
     delete loggedInUser.password;
     delete loggedInUser.admin;
+
+    // Add CORS headers to the response
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      "https://authentication-with-next.vercel.app, https://shop-management-backend-84x8.onrender.com, http://localhost:3000"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
 
     res.status(200).send({
       success: true,
@@ -519,6 +521,17 @@ const handleGetSingleUser = async (req, res, next) => {
   }
 };
 
+const handleDeleteUser = async (req, res, next) => {
+  try {
+    res.status(200).send({
+      success: true,
+      message: "User deleted",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   handleCreateUser,
   handleActivateUserAccount,
@@ -527,4 +540,5 @@ export {
   handleLogoutUser,
   handleRefreshToken,
   handleGetSingleUser,
+  handleDeleteUser,
 };

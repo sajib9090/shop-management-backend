@@ -3,6 +3,7 @@ import express from "express";
 import {
   handleActivateUserAccount,
   handleCreateUser,
+  handleDeleteUser,
   handleGetSingleUser,
   handleGetUsers,
   handleLoginUser,
@@ -18,9 +19,6 @@ import {
 } from "../middlewares/authUser.js";
 export const userRouter = express.Router();
 
-
-
-
 // creation
 userRouter.post("/create-user", handleCreateUser);
 userRouter.get("/verify/:token", handleActivateUserAccount);
@@ -32,6 +30,9 @@ userRouter.get("/auth-manage-token", handleRefreshToken);
 // get
 userRouter.get("/find-users", isLoggedIn, handleGetUsers);
 userRouter.get("/find-user/:id", isLoggedIn, handleGetSingleUser);
+
+// delete user route
+userRouter.delete('/remove/:id', isAdmin, handleDeleteUser)
 
 //check route
 userRouter.get("/check", isLoggedIn, isAdmin, handleGetUsers);
