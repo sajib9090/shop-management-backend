@@ -377,30 +377,38 @@ const handleEditProduct = async (req, res, next) => {
       stockLeft = numb;
     }
 
-    if (purchasePrice || sellPrice) {
-      if (purchasePrice && sellPrice) {
-        if (purchasePrice >= sellPrice) {
-          throw createError(
-            400,
-            "Sell price must be higher than purchase price"
-          );
-        }
+    if (purchasePrice !== undefined && sellPrice !== undefined) {
+      if (purchasePrice >= sellPrice) {
+        throw createError(400, "Sell price must be higher than purchase price");
       }
-      if (purchasePrice && !sellPrice && sellPrice != undefined) {
-        if (purchasePrice >= existingProduct?.sell_price) {
-          throw createError(
-            400,
-            "Sell price must be higher than purchase price"
-          );
-        }
+    } else if (
+      purchasePrice !== undefined &&
+      (sellPrice === undefined || isNaN(sellPrice))
+    ) {
+      if (purchasePrice >= existingProduct?.sell_price) {
+        throw createError(400, "Sell price must be higher than purchase price");
       }
-      if (sellPrice && !purchasePrice && purchasePrice != undefined) {
-        if (sellPrice <= existingProduct?.purchase_price) {
-          throw createError(
-            400,
-            "Sell price must be higher than purchase price"
-          );
-        }
+    } else if (
+      (purchasePrice === undefined || isNaN(purchasePrice)) &&
+      sellPrice !== undefined
+    ) {
+      if (sellPrice <= existingProduct?.purchase_price) {
+        throw createError(400, "Sell price must be higher than purchase price");
+      }
+    }
+    if (purchasePrice && sellPrice) {
+      if (purchasePrice >= sellPrice) {
+        throw createError(400, "Sell price must be higher than purchase price");
+      }
+    }
+    if (purchasePrice && !sellPrice && sellPrice != undefined) {
+      if (purchasePrice >= existingProduct?.sell_price) {
+        throw createError(400, "Sell price must be higher than purchase price");
+      }
+    }
+    if (sellPrice && !purchasePrice && purchasePrice != undefined) {
+      if (sellPrice <= existingProduct?.purchase_price) {
+        throw createError(400, "Sell price must be higher than purchase price");
       }
     }
 
