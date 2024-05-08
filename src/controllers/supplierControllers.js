@@ -35,7 +35,10 @@ const handleCreateSupplier = async (req, res, next) => {
       createdAt: new Date(),
     };
 
-    await suppliersCollection.insertOne(newSupplier);
+    const newItem = await suppliersCollection.insertOne(newSupplier);
+    if (!newItem?.insertedId) {
+      throw createError(400, "Can't added new supplier. Please try again");
+    }
 
     res.status(200).send({
       success: true,

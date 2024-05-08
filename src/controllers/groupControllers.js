@@ -35,7 +35,10 @@ const handleCreateGroup = async (req, res, next) => {
       createdAt: new Date(),
     };
 
-    await groupsCollection.insertOne(newGroup);
+    const newItem = await groupsCollection.insertOne(newGroup);
+    if (!newItem?.insertedId) {
+      throw createError(400, "Can't added new group. Please try again");
+    }
 
     res.status(200).send({
       success: true,

@@ -32,7 +32,7 @@ userRouter.get("/find-users", isLoggedIn, handleGetUsers);
 userRouter.get("/find-user/:id", isLoggedIn, handleGetSingleUser);
 
 // delete user route
-userRouter.delete('/remove/:id', isAdmin, handleDeleteUser)
+userRouter.delete("/remove/:id", isAdmin, handleDeleteUser);
 
 //check route
 userRouter.get("/check", isLoggedIn, isAdmin, handleGetUsers);

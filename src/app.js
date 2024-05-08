@@ -11,6 +11,7 @@ import { categoryRouter } from "./routers/categoryRouters.js";
 import { groupRouter } from "./routers/groupRouters.js";
 import { supplierRouter } from "./routers/supplierRouters.js";
 import { productTypeRouter } from "./routers/productTypeRouters.js";
+import { productRouter } from "./routers/productRouters.js";
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/groups", groupRouter);
 app.use("/api/v1/suppliers", supplierRouter);
 app.use("/api/v1/product-types", productTypeRouter);
+app.use("/api/v1/products", productRouter);
 
 app.get("/", (req, res) => {
   const userAgent = req.headers["user-agent"];

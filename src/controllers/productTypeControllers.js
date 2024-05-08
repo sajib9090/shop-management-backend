@@ -43,7 +43,10 @@ const handleCreateProductType = async (req, res, next) => {
       createdAt: new Date(),
     };
 
-    await productTypesCollection.insertOne(newProductType);
+    const newItem = await productTypesCollection.insertOne(newProductType);
+    if (!newItem?.insertedId) {
+      throw createError(400, "Can't added new product_type. Please try again");
+    }
 
     res.status(200).send({
       success: true,

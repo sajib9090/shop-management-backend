@@ -35,7 +35,10 @@ const handleCreateCategory = async (req, res, next) => {
       createdAt: new Date(),
     };
 
-    await categoriesCollection.insertOne(newCategory);
+    const newItem = await categoriesCollection.insertOne(newCategory);
+    if (!newItem?.insertedId) {
+      throw createError(400, "Can't added new category. Please try again");
+    }
 
     res.status(200).send({
       success: true,
