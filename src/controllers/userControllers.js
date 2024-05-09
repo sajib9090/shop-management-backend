@@ -351,6 +351,8 @@ const handleLoginUser = async (req, res, next) => {
       success: true,
       message: "Login successfully",
       data: loggedInUser,
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
     next(error);
@@ -359,9 +361,13 @@ const handleLoginUser = async (req, res, next) => {
 
 const handleLogoutUser = async (req, res, next) => {
   try {
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
     // console.log(req.user);
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+    res.clearCookie("accessToken", options);
+    res.clearCookie("refreshToken", options);
 
     res.status(200).send({
       success: true,
