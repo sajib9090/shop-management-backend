@@ -17,6 +17,7 @@ import {
   isAuthority,
   isShopOwner,
 } from "../middlewares/authUser.js";
+import { verifySubscription } from "../middlewares/subscription.js";
 export const userRouter = express.Router();
 
 // creation
@@ -35,4 +36,10 @@ userRouter.get("/find-user/:id", isLoggedIn, handleGetSingleUser);
 userRouter.delete("/remove/:id", isAdmin, handleDeleteUser);
 
 //check route
-userRouter.get("/check", isLoggedIn, isAdmin, handleGetUsers);
+userRouter.get(
+  "/check",
+  isLoggedIn,
+  isAdmin,
+  verifySubscription,
+  handleGetUsers
+);

@@ -52,7 +52,7 @@ const handleCreateCategory = async (req, res, next) => {
 
 const handleGetCategories = async (req, res, next) => {
   try {
-    const user = req.user;
+    const { user, subscriptionRemainingDays } = req;
     const search = req.query.search || "";
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit);
@@ -105,6 +105,7 @@ const handleGetCategories = async (req, res, next) => {
     res.status(200).send({
       success: true,
       message: "Categories retrieved successfully",
+      subscription: `After ${subscriptionRemainingDays} days will automatically expire your shop's subscription`,
       data_found: count,
       pagination: {
         totalPages: Math.ceil(count / limit),

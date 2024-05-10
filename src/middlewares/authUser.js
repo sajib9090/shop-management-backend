@@ -17,10 +17,10 @@ const limiter = rateLimit({
 const isLoggedIn = async (req, res, next) => {
   try {
     // const token = req.cookies?.accessToken;
-    const t = req.headers.authorization || req.headers.Authorization;
+    const incomingToken =
+      req.headers.authorization || req.headers.Authorization;
 
-    const token = t?.split(" ")[1];
-    
+    const token = incomingToken?.split(" ")[1];
 
     if (!token) {
       throw createError(401, "Access token not found. Please Login First");

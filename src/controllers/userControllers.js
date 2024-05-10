@@ -328,12 +328,12 @@ const handleLoginUser = async (req, res, next) => {
 
     //token cookie
     const accessToken = await createJWT({ user }, jwtAccessToken, "1d");
-    res.cookie("accessToken", accessToken, {
-      maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
+    // res.cookie("accessToken", accessToken, {
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    // });
 
     const refreshToken = await createJWT({ user }, jwtRefreshToken, "30d");
     res.cookie("refreshToken", refreshToken, {
@@ -366,7 +366,7 @@ const handleLogoutUser = async (req, res, next) => {
       secure: true,
     };
     // console.log(req.user);
-    res.clearCookie("accessToken", options);
+    // res.clearCookie("accessToken", options);
     res.clearCookie("refreshToken", options);
 
     res.status(200).send({
@@ -419,7 +419,6 @@ const handleRefreshToken = async (req, res, next) => {
 const handleGetUsers = async (req, res, next) => {
   try {
     const user = req.user;
-
     const search = req.query.search || "";
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit);
