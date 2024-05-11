@@ -202,8 +202,13 @@ const handleActivateUserAccount = async (req, res, next) => {
           ? existsCountry?.currency?.name
           : "Bangladeshi Taka",
       },
-      subscription: { last_payment: "" },
       payment_info: { payment_invoices: [] },
+      subscription_info: {
+        trial_running: false,
+        trial_over: false,
+        last_payment: "",
+        expiresAt: "",
+      },
       subscription_expired: false,
       shop_images: { logo: "", favicon: "" },
       createdBy: decoded?.username,
@@ -246,6 +251,8 @@ const handleActivateUserAccount = async (req, res, next) => {
 
       throw createError(400, "User not created. Try again");
     }
+
+    res.redirect("/");
 
     res.setHeader("Content-Type", "text/html");
 

@@ -36,10 +36,4 @@ userRouter.get("/find-user/:id", isLoggedIn, handleGetSingleUser);
 userRouter.delete("/remove/:id", isAdmin, handleDeleteUser);
 
 //check route
-userRouter.get(
-  "/check",
-  isLoggedIn,
-  isAdmin,
-  verifySubscription,
-  handleGetUsers
-);
+userRouter.get("/check", isLoggedIn, verifySubscription, handleGetUsers);

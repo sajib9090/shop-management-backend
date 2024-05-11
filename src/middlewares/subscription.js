@@ -14,25 +14,40 @@ const verifySubscription = async (req, res, next) => {
       throw createError(404, "Shop not found");
     }
 
-    const expiresAtDate = new Date(shop.subscription.expiresAt);
-    const currentDate = new Date();
-
-    const remainingDays = Math.ceil(
-      (expiresAtDate - currentDate) / (1000 * 60 * 60 * 24)
-    );
-
-    if (remainingDays > 0) {
-      req.subscriptionRemainingDays = remainingDays;
+    if (
+      shop?.subscription_info?.expiresAt == undefined ||
+      !shop?.subscription_info?.expiresAt
+    ) {
+      throw createError(
+        400,
+        "No subscription found. You can request for free trial"
+      );
     }
 
-    const filter = { shop_id: shop_id };
-    if (expiresAtDate <= currentDate) {
-      await shopsCollection.updateOne(filter, {
-        $set: {
-          subscription_expired: true,
-        },
-      });
-      throw createError(402, "Subscription expired");
+    if (
+      shop?.subscription_info?.trial_running ||
+      shop?.subscription_info?.trial_over
+    ) {
+      const expiresAtDate = new Date(shop.subscription_info.expiresAt);
+      const currentDate = new Date();
+
+      const remainingDays = Math.ceil(
+        (expiresAtDate - currentDate) / (1000 * 60 * 60 * 24)
+      );
+
+      if (remainingDays > 0) {
+        req.subscriptionRemainingDays = remainingDays;
+      }
+
+      const filter = { shop_id: shop_id };
+      if (expiresAtDate <= currentDate) {
+        await shopsCollection.updateOne(filter, {
+          $set: {
+            subscription_expired: true,
+          },
+        });
+        throw createError(402, "Subscription needed");
+      }
     }
 
     next();

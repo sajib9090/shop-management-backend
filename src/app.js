@@ -12,6 +12,7 @@ import { groupRouter } from "./routers/groupRouters.js";
 import { supplierRouter } from "./routers/supplierRouters.js";
 import { productTypeRouter } from "./routers/productTypeRouters.js";
 import { productRouter } from "./routers/productRouters.js";
+import { subscriptionRouter } from "./routers/subscriptionRouters.js";
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // routes
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/shops", shopRouter);
@@ -51,8 +53,10 @@ app.use("/api/v1/groups", groupRouter);
 app.use("/api/v1/suppliers", supplierRouter);
 app.use("/api/v1/product-types", productTypeRouter);
 app.use("/api/v1/products", productRouter);
+app.use("/api/v1/subscriptions", subscriptionRouter);
 
 app.get("/", (req, res) => {
+  
   const userAgent = req.headers["user-agent"];
   const parser = new UAParser();
   const result = parser.setUA(userAgent).getResult();
