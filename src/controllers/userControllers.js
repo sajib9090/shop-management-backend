@@ -270,7 +270,7 @@ const handleActivateUserAccount = async (req, res, next) => {
             </body>
         </html>
     `;
-    res.status(200).send(htmlContent);
+    res.status(201).send(htmlContent);
   } catch (error) {
     next(error);
   }

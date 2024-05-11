@@ -24,30 +24,28 @@ const verifySubscription = async (req, res, next) => {
       );
     }
 
-    if (
-      shop?.subscription_info?.trial_running ||
-      shop?.subscription_info?.trial_over
-    ) {
-      const expiresAtDate = new Date(shop.subscription_info.expiresAt);
-      const currentDate = new Date();
+    const expiresAtDate = new Date(shop.subscription_info.expiresAt);
+    const currentDate = new Date();
 
-      const remainingDays = Math.ceil(
-        (expiresAtDate - currentDate) / (1000 * 60 * 60 * 24)
-      );
+    const remainingDays = Math.ceil(
+      (expiresAtDate - currentDate) / (1000 * 60 * 60 * 24)
+    );
 
-      if (remainingDays > 0) {
-        req.subscriptionRemainingDays = remainingDays;
+    if (remainingDays > 0) {
+      if (shop?.subscription_info?.trial_running) {
+        req.remainingFreeTrial = remainingDays;
       }
+      req.subscriptionRemainingDays = remainingDays;
+    }
 
-      const filter = { shop_id: shop_id };
-      if (expiresAtDate <= currentDate) {
-        await shopsCollection.updateOne(filter, {
-          $set: {
-            subscription_expired: true,
-          },
-        });
-        throw createError(402, "Subscription needed");
-      }
+    const filter = { shop_id: shop_id };
+    if (expiresAtDate <= currentDate) {
+      await shopsCollection.updateOne(filter, {
+        $set: {
+          subscription_expired: true,
+        },
+      });
+      throw createError(402, "Subscription needed");
     }
 
     next();

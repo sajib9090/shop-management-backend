@@ -128,7 +128,7 @@ const handleCreateSubscription = async (req, res, next) => {
 
     await subscriptionsCollection.insertOne(newSubscriptionMethod);
 
-    res.status(200).send({
+    res.status(201).send({
       success: true,
       message: "Subscription added",
       data: newSubscriptionMethod,

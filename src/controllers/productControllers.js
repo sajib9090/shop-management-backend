@@ -120,7 +120,7 @@ const handleCreateProduct = async (req, res, next) => {
       throw createError(400, "Can't added new product. Please try again");
     }
 
-    res.status(200).send({
+    res.status(201).send({
       success: true,
       message: "Product created successfully",
       data: newProduct,

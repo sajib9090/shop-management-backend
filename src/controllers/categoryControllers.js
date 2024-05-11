@@ -40,7 +40,7 @@ const handleCreateCategory = async (req, res, next) => {
       throw createError(400, "Can't added new category. Please try again");
     }
 
-    res.status(200).send({
+    res.status(201).send({
       success: true,
       message: "Category created successfully",
       data: newCategory,

@@ -1,6 +1,9 @@
 import createError from "http-errors";
 import { ObjectId } from "mongodb";
-import { shopsCollection } from "../collections/collections.js";
+import {
+  shopsCollection,
+  subscriptionsCollection,
+} from "../collections/collections.js";
 import { validateString } from "../helpers/validateString.js";
 import slugify from "slugify";
 import validator from "validator";
@@ -87,4 +90,65 @@ const handleGetSingleShop = async (req, res, next) => {
   }
 };
 
-export { handleGetShops, handleGetSingleShop };
+const handleFreeTrial = async (req, res, next) => {
+  const user = req.user;
+  const { plan_id } = req.body;
+
+  try {
+    requiredField(plan_id, "Plan_id is required");
+    if (typeof plan_id !== "string" || plan_id?.length !== 34) {
+      throw createError(400, "Invalid plan_id");
+    }
+    const shop = await shopsCollection.findOne({ shop_id: user?.shop_id });
+    if (!shop) {
+      throw createError(404, "Invalid request");
+    }
+
+    if (shop?.subscription_info?.trial_running) {
+      throw createError(400, "Your free trial is running");
+    }
+    if (shop?.subscription_info?.trial_over) {
+      throw createError(402, "You used your free trial. No trial available");
+    }
+
+    const plan = await subscriptionsCollection.findOne({ plan_id: plan_id });
+    if (!plan) {
+      throw createError(404, "Subscription plan not found");
+    }
+
+    const freeTrialAvailableDays = parseInt(plan.trial_period.split(" ")[0]);
+
+    const trialDate = new Date();
+    trialDate.setDate(trialDate.getDate() + freeTrialAvailableDays);
+
+    const filter = { shop_id: shop?.shop_id };
+
+    const updatedInfo = {
+      subscription_info: {
+        ...shop?.subscription_info,
+        selected_plan_id: plan?.plan_id,
+        trial_running: true,
+        expiresAt: trialDate,
+      },
+      subscription_expired: false,
+      last_updated_for_subscription: new Date(),
+      updatedBy: user?.user_id,
+      updatedAt: new Date(),
+    };
+
+    const updatedResult = await shopsCollection.findOneAndUpdate(filter, {
+      $set: updatedInfo,
+    });
+
+    console.log(updatedResult);
+
+    res.status(200).send({
+      success: true,
+      message: "Free trial updated successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { handleGetShops, handleGetSingleShop, handleFreeTrial };

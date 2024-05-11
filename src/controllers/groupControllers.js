@@ -40,7 +40,7 @@ const handleCreateGroup = async (req, res, next) => {
       throw createError(400, "Can't added new group. Please try again");
     }
 
-    res.status(200).send({
+    res.status(201).send({
       success: true,
       message: "Group created successfully",
       data: newGroup,
