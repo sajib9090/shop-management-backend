@@ -104,11 +104,24 @@ const handleFreeTrial = async (req, res, next) => {
       throw createError(404, "Invalid request");
     }
 
+    const expiresAtDate = new Date(shop.subscription_info.expiresAt);
+    const currentDate = new Date();
+
+    const remainingDays = Math.ceil(
+      (expiresAtDate - currentDate) / (1000 * 60 * 60 * 24)
+    );
+
     if (shop?.subscription_info?.trial_running) {
-      throw createError(400, "Your free trial is running");
+      throw createError(
+        400,
+        `Your free trial is running. ${remainingDays} days remaining`
+      );
     }
     if (shop?.subscription_info?.trial_over) {
-      throw createError(402, "You used your free trial. No trial available");
+      throw createError(
+        402,
+        "You used your free trial. No trial available, need subscription"
+      );
     }
 
     const plan = await subscriptionsCollection.findOne({ plan_id: plan_id });
@@ -129,6 +142,7 @@ const handleFreeTrial = async (req, res, next) => {
         selected_plan_id: plan?.plan_id,
         trial_running: true,
         expiresAt: trialDate,
+        trial_startAt: new Date(),
       },
       subscription_expired: false,
       last_updated_for_subscription: new Date(),
@@ -136,11 +150,9 @@ const handleFreeTrial = async (req, res, next) => {
       updatedAt: new Date(),
     };
 
-    const updatedResult = await shopsCollection.findOneAndUpdate(filter, {
+    await shopsCollection.findOneAndUpdate(filter, {
       $set: updatedInfo,
     });
-
-    console.log(updatedResult);
 
     res.status(200).send({
       success: true,

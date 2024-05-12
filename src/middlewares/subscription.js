@@ -34,8 +34,9 @@ const verifySubscription = async (req, res, next) => {
     if (remainingDays > 0) {
       if (shop?.subscription_info?.trial_running) {
         req.remainingFreeTrial = remainingDays;
+      } else {
+        req.subscriptionRemainingDays = remainingDays;
       }
-      req.subscriptionRemainingDays = remainingDays;
     }
 
     const filter = { shop_id: shop_id };
@@ -45,6 +46,18 @@ const verifySubscription = async (req, res, next) => {
           subscription_expired: true,
         },
       });
+      if (shop?.subscription_info?.trial_running) {
+        await shopsCollection.updateOne(filter, {
+          $set: {
+            subscription_info: {
+              ...shop.subscription_info,
+              trial_running: false,
+              trial_over: true,
+              trial_expiresAt: shop?.subscription_info?.expiresAt,
+            },
+          },
+        });
+      }
       throw createError(402, "Subscription needed");
     }
 

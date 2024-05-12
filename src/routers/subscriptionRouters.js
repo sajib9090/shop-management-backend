@@ -4,6 +4,7 @@ import {
   handleCreateSubscription,
   handleGetSubscriptionPlan,
   handleGetSubscriptionPlans,
+  handlePurchaseSubscriptionPlan,
 } from "../controllers/subscriptionControllers.js";
 export const subscriptionRouter = express.Router();
 
@@ -17,4 +18,11 @@ subscriptionRouter.get("/find-subscription-plans", handleGetSubscriptionPlans);
 subscriptionRouter.get(
   "/find-subscription-plan/:id",
   handleGetSubscriptionPlan
+);
+
+// purchase subscription
+subscriptionRouter.post(
+  "/purchase-subscription",
+  isLoggedIn,
+  handlePurchaseSubscriptionPlan
 );

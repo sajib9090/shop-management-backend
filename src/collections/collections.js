@@ -11,6 +11,7 @@ const productTypesCollection = client.db(db_name).collection("product-types");
 const countriesCollection = client.db(db_name).collection("countries");
 const productsCollection = client.db(db_name).collection("products");
 const subscriptionsCollection = client.db(db_name).collection("subscriptions");
+const paymentsCollection = client.db(db_name).collection("payments");
 
 export {
   usersCollection,
@@ -22,4 +23,5 @@ export {
   countriesCollection,
   productsCollection,
   subscriptionsCollection,
+  paymentsCollection,
 };
